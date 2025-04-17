@@ -16,15 +16,40 @@ public class TaxFunction {
                                    int deductible,
                                    boolean isMarried,
                                    int numberOfChildren) {
+        validateMonths(numberOfMonthWorking);
+        int validChildren = capChildren(numberOfChildren);
 
-        int validMonths   = Math.min(numberOfMonthWorking, MAX_WORKING_MONTHS);
-        int validChildren = Math.min(numberOfChildren, MAX_CHILDREN);
+        int grossIncome      = calculateGrossIncome(monthlySalary, otherMonthlyIncome, numberOfMonthWorking);
+        int nonTaxableIncome = calculateNonTaxable(isMarried, validChildren);
+        int taxableIncome    = grossIncome - deductible - nonTaxableIncome;
 
-        int raw = (monthlySalary + otherMonthlyIncome) * validMonths - deductible;
-        int nonTaxable = BASE_NON_TAXABLE
-                       + (isMarried ? MARRIAGE_ALLOWANCE + (validChildren * CHILD_ALLOWANCE) : 0);
+        return calculateFinalTax(taxableIncome);
+    }
 
-        int tax = (int) Math.round(TAX_RATE * (raw - nonTaxable));
-        return tax < 0 ? 0 : tax;
+    private static void validateMonths(int months) {
+        if (months < 0 || months > MAX_WORKING_MONTHS) {
+            throw new IllegalArgumentException("Months worked must be 0–" + MAX_WORKING_MONTHS);
+        }
+    }
+
+    private static int capChildren(int count) {
+        return Math.max(0, Math.min(count, MAX_CHILDREN));
+    }
+
+    private static int calculateGrossIncome(int salary, int otherIncome, int months) {
+        return (salary + otherIncome) * months;
+    }
+
+    private static int calculateNonTaxable(boolean married, int children) {
+        int nti = BASE_NON_TAXABLE;
+        if (married) {
+            nti += MARRIAGE_ALLOWANCE + (children * CHILD_ALLOWANCE);
+        }
+        return nti;
+    }
+
+    private static int calculateFinalTax(int taxableIncome) {
+        int rawTax = (int) Math.round(TAX_RATE * taxableIncome);
+        return Math.max(rawTax, 0);
     }
 }
