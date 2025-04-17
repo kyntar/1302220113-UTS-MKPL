@@ -52,30 +52,32 @@ public class Employee {
         
         this.children = new LinkedList<>();
     }
+	private int calculateMonthsWorkedThisYear() {
+        LocalDate now = LocalDate.now();
+        if (now.getYear() == yearJoined) {
+            return Math.max(1, now.getMonthValue() - monthJoined);
+        }
+        return 12;
+    }
 	
 	/**
 	 * Fungsi untuk menentukan gaji bulanan pegawai berdasarkan grade kepegawaiannya (grade 1: 3.000.000 per bulan, grade 2: 5.000.000 per bulan, grade 3: 7.000.000 per bulan)
 	 * Jika pegawai adalah warga negara asing gaji bulanan diperbesar sebanyak 50%
 	 */
 	
-	public void setMonthlySalary(int grade) {	
-		if (grade == 1) {
-			monthlySalary = 3000000;
-			if (isForeigner) {
-				monthlySalary = (int) (3000000 * 1.5);
-			}
-		}else if (grade == 2) {
-			monthlySalary = 5000000;
-			if (isForeigner) {
-				monthlySalary = (int) (3000000 * 1.5);
-			}
-		}else if (grade == 3) {
-			monthlySalary = 7000000;
-			if (isForeigner) {
-				monthlySalary = (int) (3000000 * 1.5);
-			}
-		}
-	}
+	 public void setMonthlySalary(int grade) {
+        int base;
+        switch (grade) {
+            case 1 -> base = 3_000_000;
+            case 2 -> base = 5_000_000;
+            case 3 -> base = 7_000_000;
+            default -> throw new IllegalArgumentException("Invalid grade: " + grade);
+        }
+        if (isForeigner) {
+            base = (int)(base * 1.5);
+        }
+        this.monthlySalary = base;
+    }
 	
 	public void setAnnualDeductible(int deductible) {	
 		this.annualDeductible = deductible;
@@ -95,21 +97,14 @@ public class Employee {
 	}
 	
 	public int getAnnualIncomeTax() {
-        // Hitung berapa bulan bekerja di tahun ini
-        LocalDate now = LocalDate.now();
-        int monthWorkingInYear = (now.getYear() == yearJoined)
-            ? now.getMonthValue() - monthJoined
-            : 12;
-        
-        // Boolean untuk status menikah
+        int monthsWorked = calculateMonthsWorkedThisYear();
         boolean isMarried = (spouseIdNumber != null && !spouseIdNumber.isEmpty());
-        // Jumlah anak
-        int childCount  = children.size();
-        
+        int childCount   = children.size();
+
         return TaxFunction.calculateTax(
             monthlySalary,
             otherMonthlyIncome,
-            monthWorkingInYear,
+            monthsWorked,
             annualDeductible,
             isMarried,
             childCount
