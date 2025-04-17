@@ -51,6 +51,13 @@ public class Employee {
         
         this.children = new LinkedList<>();
     }
+	private int calculateMonthsWorkedThisYear() {
+        LocalDate now = LocalDate.now();
+        if (now.getYear() == yearJoined) {
+            return Math.max(1, now.getMonthValue() - monthJoined);
+        }
+        return 12;
+    }
 	
 	/**
 	 * Fungsi untuk menentukan gaji bulanan pegawai berdasarkan grade kepegawaiannya (grade 1: 3.000.000 per bulan, grade 2: 5.000.000 per bulan, grade 3: 7.000.000 per bulan)
@@ -89,21 +96,14 @@ public class Employee {
 	}
 	
 	public int getAnnualIncomeTax() {
-        // Hitung berapa bulan bekerja di tahun ini
-        LocalDate now = LocalDate.now();
-        int monthWorkingInYear = (now.getYear() == yearJoined)
-            ? now.getMonthValue() - monthJoined
-            : 12;
-        
-        // Boolean untuk status menikah
+        int monthsWorked = calculateMonthsWorkedThisYear();
         boolean isMarried = (spouseIdNumber != null && !spouseIdNumber.isEmpty());
-        // Jumlah anak
-        int childCount  = children.size();
-        
+        int childCount   = children.size();
+
         return TaxFunction.calculateTax(
             monthlySalary,
             otherMonthlyIncome,
-            monthWorkingInYear,
+            monthsWorked,
             annualDeductible,
             isMarried,
             childCount
